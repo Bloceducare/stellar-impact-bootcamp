@@ -5,7 +5,9 @@ target
 # Rust's output directory
 target
 test_snapshots/
+node_modules/
 
+.DS_STORE
 # Local settings
 .soroban
 .stellar
