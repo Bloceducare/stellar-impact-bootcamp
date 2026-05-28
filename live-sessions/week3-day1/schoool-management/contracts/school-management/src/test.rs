@@ -114,3 +114,97 @@ fn test_make_payment() {
 
     assert_eq!(student.total_paid, amount);
 }
+
+#[test]
+fn test_update_student_class() {
+    let setup_result = setup();
+
+    let name = String::from_str(&setup_result.env, "Sib");
+
+    let initial_class = Class::College;
+
+    setup_result.client.register_student(
+        &setup_result.student_wallet,
+        &name,
+        &initial_class,
+    );
+
+    let student_id = 1;
+
+    let new_class = Class::HighSchool;
+
+    let result = setup_result
+        .client
+        .try_update_student_class(&student_id, &new_class);
+
+    assert!(result.is_ok());
+
+    let updated_student = setup_result.client.get_student(&student_id);
+
+    assert_eq!(updated_student.class_name, new_class);
+}
+
+#[test]
+fn test_get_payment_history() {
+    let setup_result = setup();
+
+    let name = String::from_str(&setup_result.env, "Sib");
+
+    let class_name = Class::College;
+
+    setup_result.client.register_student(
+        &setup_result.student_wallet,
+        &name,
+        &class_name,
+    );
+
+    let student_id = 1;
+
+    let amount = 1_000_000i128;
+
+    setup_result
+        .token_client
+        .mint(&setup_result.student_wallet, &amount);
+
+    setup_result
+        .client
+        .make_payment(&student_id, &amount);
+
+    let payments = setup_result
+        .client
+        .get_payment_history(&student_id);
+
+    assert_eq!(payments.len(), 1);
+
+    let payment = payments.get(0).unwrap();
+
+    assert_eq!(payment.student_id, student_id);
+    assert_eq!(payment.amount, amount);
+}
+
+#[test]
+fn test_remove_student() {
+    let setup_result = setup();
+
+    let name = String::from_str(&setup_result.env, "Sib");
+
+    let class_name = Class::College;
+
+    setup_result.client.register_student(
+        &setup_result.student_wallet,
+        &name,
+        &class_name,
+    );
+
+    let student_id = 1;
+
+    let result = setup_result
+        .client
+        .try_remove_student(&student_id);
+
+    assert!(result.is_ok());
+
+    let student = setup_result.client.get_student(&student_id);
+
+    assert_eq!(student.is_registered, false);
+}

@@ -122,4 +122,41 @@ impl SchoolManagement {
 
         Ok(())
     }
+    pub fn update_student_class(
+        env: &Env,
+        student_id: u64,
+        new_class: Class,
+    ) -> Result<(), ContractError> {
+        let mut student = Self::get_student(env, student_id);
+        student.wallet_address.require_auth();
+        student.class_name = new_class;
+        env.storage()
+            .persistent()
+            .set(&DataKey::Student(student_id), &student);
+        Ok(())
+    }
+
+    pub fn get_student_payment_history(
+        env: &Env,
+        student_id: u64,
+    ) -> Vec<Payment> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::StudentPayments(student_id))
+            .unwrap()
+    }
+
+    pub fn remove_student(
+        env: &Env,
+        student_id: u64,
+    ) -> Result<(), ContractError> {
+        let mut student = Self::get_student(env, student_id);
+        student.wallet_address.require_auth();
+        student.is_registered = false;
+        env.storage()
+            .persistent()
+            .set(&DataKey::Student(student_id), &student);
+        Ok(())
+    }
+
 }
